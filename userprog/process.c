@@ -21,14 +21,6 @@
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
 
-/* This function returns the program name from an argument string */
-char* get_program(const char* file_name)
-{
-  char* _ptr = NULL;
-  char* _val = strtok_r(file_name, " ", &_ptr);
-  return _val;
-}
-
 /* Starts a new thread running a user program loaded from
    FILENAME.  The new thread may be scheduled (and may even exit)
    before process_execute() returns.  Returns the new process's
@@ -46,11 +38,12 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
 
-  /* this line aids to get program name from an argument string */
-  char* _name = get_program(file_name);
+  //code to extract program name from argument
+  char *ar_ptr;
+  char *prgrm_name = strtok_r(fn_copy, " ", &ar_ptr);
 
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
+  tid = thread_create (prgrm_name, PRI_DEFAULT, start_process, fn_copy);
 
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
@@ -72,10 +65,11 @@ start_process (void *file_name_)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
 
-  /* this line aids to get program name from an argument string */
-  char* _name = get_program(file_name);
+  //code to extract program name from argument
+  char *ar_ptr;
+  char *prgrm_name = strtok_r(file_name, " ", &ar_ptr);
 
-  success = load (file_name, &if_.eip, &if_.esp);
+  success = load (prgrm_name, &if_.eip, &if_.esp);
   
   /* If load failed, quit. */
   palloc_free_page (file_name);
@@ -133,8 +127,9 @@ process_exit (void)
       pagedir_activate (NULL);
       pagedir_destroy (pd);
     }
-  /* Implementation of exit code */
-  printf("%s: exit code: %d\n", cur -> name, cur -> exitcode);
+
+  //implementing exit code
+  printf("%s: exit code: %d\n", cur -> name, cur -> exit_code);
 
 }
 
